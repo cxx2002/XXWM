@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cxx.reggie.mapper.OrderDetailMapper;
 import com.cxx.reggie.pojo.OrderDetail;
 import com.cxx.reggie.service.OrderDetailService;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,7 +16,7 @@ import javax.annotation.Resource;
  * @author 陈喜喜
  * @since 2022-09-06 22:34:27
  */
-@Slf4j
+
 @RestController
 @RequestMapping("orderDetail")
 public class OrderDetailController {
