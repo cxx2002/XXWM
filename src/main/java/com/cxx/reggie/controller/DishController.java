@@ -12,10 +12,13 @@ import com.cxx.reggie.service.DishFlavorService;
 import com.cxx.reggie.service.DishService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -28,6 +31,8 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("dish")
 public class DishController {
+    @Resource
+    private RedisTemplate redisTemplate;
     /**
      * 服务对象
      */
@@ -114,6 +119,9 @@ public class DishController {
     @PutMapping
     public R<String> update(@RequestBody DishDto dishDto) {
         dishService.updateWithFlavor(dishDto);
+        //清理redis缓存
+        String key = "dish_" + dishDto.getCategoryId() + "_1";
+        redisTemplate.delete(key);
         return R.success("信息修改成功！");
     }
 
@@ -126,6 +134,9 @@ public class DishController {
     @DeleteMapping
     public R<String> deleteById(@RequestParam List<Long> id) {
         dishService.removeBatchByIds(id);
+        //清理redis缓存
+        Set key = redisTemplate.keys("dish_*");
+        redisTemplate.delete(key);
         return R.success("删除成功！");
     }
 
@@ -140,6 +151,9 @@ public class DishController {
         List<Dish> list = dishService.list(queryWrapper);
         if (list != null) {
             list.forEach(dish -> dishService.updateStatusById(status, dish.getId()));
+            //清理redis缓存
+            Set key = redisTemplate.keys("dish_*");
+            redisTemplate.delete(key);
             return R.success("菜品的售卖状态已更改！");
         }
         return R.error("售卖状态不可更改,请联系管理员或客服！");
@@ -154,13 +168,23 @@ public class DishController {
      */
     @GetMapping("/list")
     public R<List<DishDto>> queryDishById(Dish dish) {
+        List<DishDto> dishDtoList = null;
+        String key = "dish_" + dish.getCategoryId() + "_" + dish.getStatus();
+        //先从redis中获取缓存数据
+        dishDtoList = (List<DishDto>) redisTemplate.opsForValue().get(key);
+        //如果存在缓存数据，直接放回
+        if (dishDtoList != null) {
+            DishController.log.info("redis缓存有此数据，未查询mysql");
+            return R.success(dishDtoList);
+        }
+
         LambdaQueryWrapper<Dish> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(Dish::getCategoryId, dish.getCategoryId());
         queryWrapper.eq(Dish::getStatus, 1);
         queryWrapper.orderByAsc(Dish::getSort).orderByDesc(Dish::getUpdateTime);
         List<Dish> dishes = dishService.list(queryWrapper);
 
-        List<DishDto> dishDtoList = dishes.stream().map(item -> {
+        dishDtoList = dishes.stream().map(item -> {
             DishDto dishDto = new DishDto();
             BeanUtils.copyProperties(item, dishDto);
             Long categoryId = item.getCategoryId();
@@ -175,6 +199,9 @@ public class DishController {
             dishDto.setFlavors(list);
             return dishDto;
         }).collect(Collectors.toList());
+
+        //如果redis不存在缓存数据，则讲mysql查出来的数据存在redis
+        redisTemplate.opsForValue().set(key, dishDtoList, 60, TimeUnit.MINUTES);
 
         return R.success(dishDtoList);
     }
