@@ -13,6 +13,8 @@ import com.cxx.reggie.service.SetmealDishService;
 import com.cxx.reggie.service.SetmealService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -80,6 +82,7 @@ public class SetmealController {
         return R.success(pageDtoInfo);
     }
 
+    @Cacheable(value = "setmealCache", key = "#setmeal.categoryId+'_'+#setmeal.status")
     @GetMapping("/list")
     public R<List<Setmeal>> queryDishById(Setmeal setmeal) {
         LambdaQueryWrapper<Setmeal> queryWrapper = new LambdaQueryWrapper<>();
@@ -116,11 +119,12 @@ public class SetmealController {
     }
 
     /**
-     * 新增数据
+     * 修改在售状态
      *
      * @param status id
      * @return 新增结果
      */
+    @CacheEvict(value = "setmealCache", allEntries = true)
     @PostMapping("/status/{status}")
     public R<String> updateSetmealStatus(@PathVariable("status") Integer status, @RequestParam List<Long> id) {
         LambdaQueryWrapper<Setmeal> queryWrapper = new LambdaQueryWrapper<>();
@@ -138,6 +142,7 @@ public class SetmealController {
      * @param setmealDto 实体
      * @return 新增结果
      */
+    @CacheEvict(value = "setmealCache", allEntries = true)
     @PostMapping
     public R<String> add(@RequestBody SetmealDto setmealDto) {
         SetmealController.log.info(setmealDto.toString());
@@ -163,6 +168,8 @@ public class SetmealController {
      * @param setmealDto 实体
      * @return 编辑结果
      */
+
+    @CacheEvict(value = "setmealCache", allEntries = true)
     @PutMapping
     public R<String> edit(@RequestBody SetmealDto setmealDto) {
         setmealService.updateWithDish(setmealDto);
@@ -176,6 +183,7 @@ public class SetmealController {
      * @param id 主键
      * @return 删除是否成功
      */
+    @CacheEvict(value = "setmealCache", allEntries = true)
     @DeleteMapping
     public R<String> deleteById(@RequestParam List<Long> id) {
         setmealService.removeBatchByIds(id);

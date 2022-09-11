@@ -76,6 +76,7 @@
             <version>1.2.70</version>
         </dependency>
 
+        <!--StringUtils等工具类包-->
         <dependency>
             <groupId>commons-lang</groupId>
             <artifactId>commons-lang</artifactId>
@@ -88,6 +89,7 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!--alibaba连接池-->
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>druid-spring-boot-starter</artifactId>
