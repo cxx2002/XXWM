@@ -2,13 +2,22 @@ package com.cxx.reggie.config;
 
 import com.cxx.reggie.common.JacksonObjectMapper;
 import com.cxx.reggie.interceptor.LoginInterceptor;
+import com.github.xiaoymin.knife4j.spring.annotations.EnableKnife4j;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurationSupport;
+import springfox.documentation.builders.ApiInfoBuilder;
+import springfox.documentation.builders.PathSelectors;
+import springfox.documentation.builders.RequestHandlerSelectors;
+import springfox.documentation.service.ApiInfo;
+import springfox.documentation.spi.DocumentationType;
+import springfox.documentation.spring.web.plugins.Docket;
+import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
 import javax.annotation.Resource;
 import java.util.List;
@@ -21,6 +30,8 @@ import java.util.List;
  */
 @Slf4j
 @Configuration
+@EnableSwagger2
+@EnableKnife4j
 public class WebMvcConfig extends WebMvcConfigurationSupport {
 
     @Resource
@@ -35,7 +46,8 @@ public class WebMvcConfig extends WebMvcConfigurationSupport {
         //指定不需要拦截的的url地址
         String[] excludePath = {"/employee/login", "/employee/logout",
                 "/backend/**", "/front/**", "/error",
-                "/user/sendMsg", "/user/login", "/user/sendMsg"};
+                "/user/sendMsg", "/user/login", "/user/sendMsg",
+                "/doc.html", "/webjars/**", "/swagger-resources", "/v2/api-docs"};
 
         registry.addInterceptor(loginInterceptor)
                 .addPathPatterns(path)
@@ -47,6 +59,8 @@ public class WebMvcConfig extends WebMvcConfigurationSupport {
     @Override
     protected void addResourceHandlers(ResourceHandlerRegistry registry) {
         WebMvcConfig.log.info("即将进行静态资源的映射:");
+        registry.addResourceHandler("/doc.html").addResourceLocations("classpath:/META-INF/resources/");
+        registry.addResourceHandler("/webjars/**").addResourceLocations("classpath:/META-INF/resources/webjars/");
 
         // 将请求路径 /backend/** 映射到 项目静态资源目录 resources/backend 下
         registry.addResourceHandler("/backend/**").addResourceLocations("classpath:/static/backend/");
@@ -66,7 +80,26 @@ public class WebMvcConfig extends WebMvcConfigurationSupport {
         // 将上面的消息转换器对象追加到SpringMVC的 转换器容器 的第一个位置(优先采用下标为 0 位置的消息转换器)
         converters.add(0, messageConverter);
 
+    }
 
+
+    private ApiInfo apiInfo() {
+        return new ApiInfoBuilder()
+                .title("嘻嘻外卖")
+                .version("1.0")
+                .description("嘻嘻外卖接口文档")
+                .build();
+    }
+
+    @Bean
+    public Docket createRestApi() {
+        //文档类型
+        return new Docket(DocumentationType.SWAGGER_2)
+                .apiInfo(this.apiInfo())
+                .select()
+                .apis(RequestHandlerSelectors.basePackage("com.cxx.reggie.controller"))
+                .paths(PathSelectors.any())
+                .build();
     }
 }
 

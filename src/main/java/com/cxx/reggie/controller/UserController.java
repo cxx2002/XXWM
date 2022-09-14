@@ -7,6 +7,10 @@ import com.cxx.reggie.pojo.User;
 import com.cxx.reggie.service.UserService;
 import com.cxx.reggie.util.EmailUtil;
 import com.cxx.reggie.util.ValidateCodeUtils;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.data.domain.PageRequest;
@@ -26,6 +30,7 @@ import java.util.concurrent.TimeUnit;
  * @author 陈喜喜
  * @since 2022-09-01 19:12:52
  */
+@Api(value = "user", tags = {"用户信息(User)表控制层"})
 @RestController
 @RequestMapping("user")
 @Slf4j
@@ -44,6 +49,11 @@ public class UserController {
      * @param user
      * @return
      */
+    @ApiImplicitParams({
+            @ApiImplicitParam(paramType = "body", dataType = "User", name = "user", value = ""),
+            @ApiImplicitParam(paramType = "query", dataType = "HttpSession", name = "session", value = "")
+    })
+    @ApiOperation(value = "发送qq邮箱验证码短信", notes = "发送qq邮箱验证码短信", httpMethod = "POST")
     @PostMapping("/sendMsg")
     public R<String> sendMsg(@RequestBody User user, HttpSession session) {
         //获取邮箱
@@ -77,6 +87,11 @@ public class UserController {
      * @param session
      * @return
      */
+    @ApiImplicitParams({
+            @ApiImplicitParam(paramType = "body", dataType = "Map", name = "map", value = ""),
+            @ApiImplicitParam(paramType = "query", dataType = "HttpSession", name = "session", value = "")
+    })
+    @ApiOperation(value = "移动端用户登录   phone变量的字符串值是邮箱，对应的在session的value是验证码 这里的接收参数是phone和code,一般肯定单独创建一个dto来接收,这里直接其实使用map也可以", notes = "移动端用户登录   phone变量的字符串值是邮箱，对应的在session的value是验证码 这里的接收参数是phone和code,一般肯定单独创建一个dto来接收,这里直接其实使用map也可以", httpMethod = "POST")
     @PostMapping("/login")
     public R<User> login(@RequestBody Map map, HttpSession session) {
         UserController.log.info("userMap:{}" + map.toString());
@@ -122,6 +137,10 @@ public class UserController {
     }
 
     // logout
+    @ApiImplicitParams({
+            @ApiImplicitParam(paramType = "query", dataType = "HttpServletRequest", name = "request", value = "")
+    })
+    @ApiOperation(value = "logout", notes = "logout", httpMethod = "POST")
     @PostMapping("/logout")
     public R<String> logout(HttpServletRequest request) {
         request.getSession().removeAttribute("email");
@@ -136,6 +155,11 @@ public class UserController {
      * @param pageRequest 分页对象
      * @return 查询结果
      */
+    @ApiImplicitParams({
+            @ApiImplicitParam(paramType = "query", dataType = "User", name = "user", value = "筛选条件"),
+            @ApiImplicitParam(paramType = "query", dataType = "PageRequest", name = "pageRequest", value = "分页对象")
+    })
+    @ApiOperation(value = "分页查询", notes = "分页查询", httpMethod = "GET")
     @GetMapping
     public ResponseEntity<Page<User>> queryByPage(User user, PageRequest pageRequest) {
         return null;
@@ -147,6 +171,10 @@ public class UserController {
      * @param id 主键
      * @return 单条数据
      */
+    @ApiImplicitParams({
+            @ApiImplicitParam(paramType = "path", dataType = "long", name = "id", value = "主键")
+    })
+    @ApiOperation(value = "通过主键查询单条数据", notes = "通过主键查询单条数据", httpMethod = "GET")
     @GetMapping("{id}")
     public ResponseEntity<User> queryById(@PathVariable("id") Long id) {
         return null;
@@ -158,6 +186,10 @@ public class UserController {
      * @param user 实体
      * @return 新增结果
      */
+    @ApiImplicitParams({
+            @ApiImplicitParam(paramType = "body", dataType = "User", name = "user", value = "实体")
+    })
+    @ApiOperation(value = "新增数据", notes = "新增数据", httpMethod = "POST")
     @PostMapping
     public ResponseEntity<User> add(@RequestBody User user) {
         return null;
@@ -169,6 +201,10 @@ public class UserController {
      * @param user 实体
      * @return 编辑结果
      */
+    @ApiImplicitParams({
+            @ApiImplicitParam(paramType = "body", dataType = "User", name = "user", value = "实体")
+    })
+    @ApiOperation(value = "编辑数据", notes = "编辑数据", httpMethod = "PUT")
     @PutMapping
     public ResponseEntity<User> edit(@RequestBody User user) {
         return null;
@@ -180,6 +216,10 @@ public class UserController {
      * @param id 主键
      * @return 删除是否成功
      */
+    @ApiImplicitParams({
+            @ApiImplicitParam(paramType = "query", dataType = "long", name = "id", value = "主键")
+    })
+    @ApiOperation(value = "删除数据", notes = "删除数据", httpMethod = "DELETE")
     @DeleteMapping
     public ResponseEntity<Boolean> deleteById(Long id) {
         return null;

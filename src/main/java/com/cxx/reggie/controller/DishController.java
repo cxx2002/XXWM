@@ -10,6 +10,10 @@ import com.cxx.reggie.pojo.DishFlavor;
 import com.cxx.reggie.service.CategoryService;
 import com.cxx.reggie.service.DishFlavorService;
 import com.cxx.reggie.service.DishService;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -27,6 +31,7 @@ import java.util.stream.Collectors;
  * @author 陈喜喜
  * @since 2022-08-22 16:32:46
  */
+@Api(value = "dish", tags = {"菜品管理(Dish)表控制层"})
 @Slf4j
 @RestController
 @RequestMapping("dish")
@@ -49,6 +54,10 @@ public class DishController {
      * @param dishDto 实体
      * @return 新增结果
      */
+    @ApiImplicitParams({
+            @ApiImplicitParam(paramType = "body", dataType = "DishDto", name = "dishDto", value = "实体")
+    })
+    @ApiOperation(value = "新增数据", notes = "新增数据", httpMethod = "POST")
     @PostMapping
     public R<String> save(@RequestBody DishDto dishDto) {
         DishController.log.info(dishDto.toString());
@@ -64,6 +73,12 @@ public class DishController {
      * @param name     搜索条件
      * @return 查询结果
      */
+    @ApiImplicitParams({
+            @ApiImplicitParam(paramType = "query", dataType = "int", name = "page", value = "分页对象"),
+            @ApiImplicitParam(paramType = "query", dataType = "int", name = "pageSize", value = "页面大小"),
+            @ApiImplicitParam(paramType = "query", dataType = "string", name = "name", value = "搜索条件")
+    })
+    @ApiOperation(value = "分页查询", notes = "分页查询", httpMethod = "GET")
     @GetMapping("/page")
     public R<Page<DishDto>> queryByPage(int page, int pageSize, String name) {
         Page<Dish> pageInfo = new Page<>(page, pageSize);
@@ -104,6 +119,10 @@ public class DishController {
      * @param id 主键
      * @return 单条数据DishDto
      */
+    @ApiImplicitParams({
+            @ApiImplicitParam(paramType = "path", dataType = "long", name = "id", value = "主键")
+    })
+    @ApiOperation(value = "通过主键查询单条数据", notes = "通过主键查询单条数据", httpMethod = "GET")
     @GetMapping("{id}")
     public R<DishDto> queryById(@PathVariable("id") Long id) {
         DishDto dishDto = dishService.getByIdWithFlavor(id);
@@ -116,6 +135,10 @@ public class DishController {
      * @param dishDto 实体
      * @return 编辑结果
      */
+    @ApiImplicitParams({
+            @ApiImplicitParam(paramType = "body", dataType = "DishDto", name = "dishDto", value = "实体")
+    })
+    @ApiOperation(value = "编辑数据", notes = "编辑数据", httpMethod = "PUT")
     @PutMapping
     public R<String> update(@RequestBody DishDto dishDto) {
         dishService.updateWithFlavor(dishDto);
@@ -131,6 +154,10 @@ public class DishController {
      * @param id 主键
      * @return 删除是否成功
      */
+    @ApiImplicitParams({
+            @ApiImplicitParam(paramType = "query", dataType = "List<Long>", name = "id", value = "主键")
+    })
+    @ApiOperation(value = "删除数据", notes = "删除数据", httpMethod = "DELETE")
     @DeleteMapping
     public R<String> deleteById(@RequestParam List<Long> id) {
         dishService.removeBatchByIds(id);
@@ -142,6 +169,11 @@ public class DishController {
 
     // 改变菜品的销售状态
 
+    @ApiImplicitParams({
+            @ApiImplicitParam(paramType = "path", dataType = "int", name = "status", value = ""),
+            @ApiImplicitParam(paramType = "query", dataType = "List<Long>", name = "id", value = "")
+    })
+    @ApiOperation(value = "", notes = "", httpMethod = "POST")
     @PostMapping("/status/{status}")
     public R<String> updateSaleStatus(@PathVariable("status") Integer status, @RequestParam List<Long> id) {
         //  菜品具体的售卖状态 由前端修改并返回，该方法传入的status是 修改之后的售卖状态，可以直接根据一个或多个菜品id进行查询并修改售卖即可
@@ -166,6 +198,10 @@ public class DishController {
      * @param dish 封装前端传过来的categoryId数据
      * @return dishes对应的菜品集合
      */
+    @ApiImplicitParams({
+            @ApiImplicitParam(paramType = "query", dataType = "Dish", name = "dish", value = "封装前端传过来的categoryId数据")
+    })
+    @ApiOperation(value = "通过categoryId查询dish集合", notes = "通过categoryId查询dish集合", httpMethod = "GET")
     @GetMapping("/list")
     public R<List<DishDto>> queryDishById(Dish dish) {
         List<DishDto> dishDtoList = null;
